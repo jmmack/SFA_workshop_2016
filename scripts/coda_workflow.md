@@ -1,11 +1,33 @@
+#### Setup
+
 Before we start, we need a working directory.
 
-Make a directory (folder) in a place where you can output files. For example, in your Documents folder
+Make a directory (folder) in a place where you can output files. For example, in your Documents folder.
 
+Next, download the otu_table from data to your working directory
 
+Now open R (or RStudio) and set your working directory by typing the commands in your Console:
+````
+setwd("...")
+````
+
+in which, the "..." is the specific pathway, e.g.,
+
+in Windows: 
+````
+setwd("C:/Users/User Name/Documents/FOLDER")
+````
+in Macs:
+````
+setwd("/Users/User Name/Documents/FOLDER")
+````
+
+#### Load packages
+We need to load the packages we'll be using. You will have had to previously installed the packages.
+````
 library(compositions)
 library(zCompositions)
-
+````
 
 #d<-read.table("test_data/otu_table.txt", header=T, sep="\t", stringsAsFactors=F, quote = "", check.names=F, row.names=1, skip=1, comment.char="")
 d<-read.table("OTU_table_brazil.txt", header=T, sep="\t", stringsAsFactors=F, quote = "", check.names=F, row.names=1, skip=1, comment.char="")
