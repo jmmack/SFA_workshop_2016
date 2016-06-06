@@ -62,7 +62,7 @@ Count the number of zeros in the table:
 
 Since there are lots of zeros in this table, we should filter out low abundace OTUs. There are a number of ways you could filter [some examples here](https://github.com/mmacklai/16S/blob/master/manipulating_counts_table.md)
 
-````{r}
+````
 # Remove OTUs <= mean read count
 # But first, we need to remove the "taxonomy" column
 
