@@ -32,10 +32,8 @@ library(zCompositions)
 #### Read in the data table
 In R, you load your OTU table into a `data frame`. You need yo have some idea of what your table looks like before attempting to import. You may want to open the table in Excel to see what format it has and what headers.
 
-#d<-read.table("test_data/otu_table.txt", header=T, sep="\t", stringsAsFactors=F, quote = "", check.names=F, row.names=1, skip=1, comment.char="")
-d<-read.table("OTU_table_brazil.txt", header=T, sep="\t", stringsAsFactors=F, quote = "", check.names=F, row.names=1, skip=1, comment.char="")
 ````
-d<-read.table("otu_table.txt", skip=1, header=T, sep="\t", stringsAsFactors=F, quote = "", check.names=F, row.names=1)
+d<-read.table("otu_table.txt", skip=1, header=T, sep="\t", stringsAsFactors=F, quote = "", check.names=F, row.names=1, comment.char="")
 ````
 - `d` is the name we are using for our dataframe
 - `skip=1` Becasue we are using QIIME-style format, the table has an extra header line that must be skipped 
@@ -43,6 +41,7 @@ d<-read.table("otu_table.txt", skip=1, header=T, sep="\t", stringsAsFactors=F, q
 - `sep="\t"` The columns are tab-separated
 - `stringsAsFactors=F, quote = "", check.names=F` these are here for parsing
 - `row.names=1` we are using the OTU IDs as rownames
+- `comment.char=""` this ignores the comment # in the headers
 
 Whenever you import a data table, you'll want to inspect it to ensure the data looks correct. Try some of the following commands:
 
@@ -52,6 +51,12 @@ dim(d)
 nrow(d)
 colnames(d)
 ````
+
+We are going to filter our OTU table to remove very low count reads and zeros.
+
+Count the number of zeros in the table:
+`sum(d == 0)`
+
 
 #remove refseqs with mean read count <=1
 count <- 10
