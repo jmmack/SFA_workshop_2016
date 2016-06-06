@@ -26,6 +26,9 @@ setwd("/Users/User Name/Documents/FOLDER")
 We need to load the packages we'll be using. You will have had to previously installed the packages.
 ````
 library(compositions)
+````
+And then
+````
 library(zCompositions)
 ````
 
@@ -54,38 +57,44 @@ colnames(d)
 
 We are going to filter our OTU table to remove very low count reads and zeros.
 
-Count the number of zeros in the table:
+Count the number of zeros in the table: 
 `sum(d == 0)`
 
+Since there are lots of zeros in this table, we should filter out low abundace OTUs. There are a number of ways you could filter [some examples here](https://github.com/mmacklai/16S/blob/master/manipulating_counts_table.md)
 
-#remove refseqs with mean read count <=1
-count <- 10
-d.1 <- data.frame(d[which(apply(d[,1:ncol(d)-1], 1, function(x){mean(x)}) > count),], check.names=F)
+````{r}
+# Remove OTUs <= mean read count
+# But first, we need to remove the "taxonomy" column
 
-#OR remove taxonomy column for now
 rownames(d)<-paste(rownames(d), d$taxonomy, sep="_")
 d$taxonomy <- NULL
 
+count <- 10
 d.1 <- data.frame(d[which(apply(d, 1, function(x){mean(x)}) > count),], check.names=F)
+````
+Now we will transform the data. We are using the the centred log-ratio, or CLR (Aitchison). This will turn our read counts into a relative abundace (abundance relative to the geometric mean of all OTUs per sample). This will allow us to retain the relationships between the individual components, but also puts the data in a geometric space where we can perform familiar statistics (and not violate CoDa).
 
-
-#replace zeros with estimate
+We are taking a logm so the zeros must be replaced with an estimate value
+````
 #samples must be ROWS (so transpose)
 d.czm <- cmultRepl(t(d.1),  label=0, method="CZM")
-
-#calculate the CLR
+```
+Calculate the CLR
+```
 #need to transpose because of cmultRepl
 d.clr <- t(apply(d.czm, 1, function(x){log(x) - mean(log(x))}))
-
-
-#????
-#Need this to calculate %variance explained
-d.mvar <- mvar(d.clr)
-
-
-#calculate principal components
+```
+Principal component analysis (PCA)
+````
 #features are COLUMNS
 d.pcx <- prcomp(d.clr)
+````
+
+Calculate the total variance and percent variance explained for our PCA axes
+```r
+d.mvar <- mvar(d.clr)
+```
+
 
 # Make the number of points equal to the number of features (for labels)
 #use: "o" or "."
