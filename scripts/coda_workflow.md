@@ -31,7 +31,7 @@ And then
 ````
 library(zCompositions)
 ````
-#### Part 1: Exploratory Compositional PCA biplot
+### Part 1: Exploratory Compositional PCA biplot
 
 #### Read in the data table
 In R, you load your OTU table into a `data frame`. You need yo have some idea of what your table looks like before attempting to import. You may want to open the table in Excel to see what format it has and what headers.
@@ -102,19 +102,23 @@ Let's plot the CoDa PCA biplot
 # These are some hacks to get the plot to look OK
 # Make the number of points equal to the number of features (for labels)
 #   Use: "o" or "."
+
 points <- c(rep(".", length(dimnames(d.pcx$rotation)[[1]])))
 
+# We can also make the samples as points instead of labels
+
+samples <- c(rep("o", length(dimnames(d.pcx$x)[[1]])))
+
 # Color and text size for labels and points (vector of 2)
-#   The first is the color of the labels, the second is the color of the points
+#   The first is the sample lables, the second is the points (OTUs). 
 col=c("black",rgb(1,0,0,0.2))
-#   The first is the size of the lables, the second is the size of the points (scale of 0-1)
-c=c(0.6, 2)
+c=c(0.5, 2) #Relative scale, 1 is 100%
 ````
 ````
 biplot(d.pcx, cex=c, col=col, var.axes=F,
     xlab=paste("PC1: ", round(sum(d.pcx$sdev[1]^2)/d.mvar, 3)),
     ylab=paste("PC2: ", round(sum(d.pcx$sdev[2]^2)/d.mvar, 3)),
-    scale=0, ylabs=points
+    scale=0, ylabs=points, xlabs=samples
 )
 ````
 If you would like a PDF of the plot, do the following:
@@ -124,54 +128,68 @@ pdf("PCA_plot.pdf")
 dev.off()
 ````
 
-#### Part 2: ALDEx2 for differential expression analysis
+### Part 2: ALDEx2 for differential expression analysis
 
+Load the ALDEx library (needs to have been previously installed)
+````
 library(ALDEx2)
-
+````
+We will use the same table from before (d) and make a copy for ALDEx
+````
+aldex.in<-d
+````
+Make a vector of conditions. This must be in the same order and the same number as the columns (samples) of the input table (aldex.in)
+````
 conds<-c(rep("td", length(grep("td", colnames(d.1)))), rep("bm", length(grep("bm", colnames(d.1)))))
 
-#or
 td<-rep("td", length(grep("td", colnames(d.1))))
 bm<-rep("bm", length(grep("bm", colnames(d.1))))
+
 conds<-c(td,bm)
 
+#shortform
+#conds<-c(rep("td", length(grep("td", colnames(d.1)))), rep("bm", length(grep("bm", colnames(d.1)))))
+````
 
+Get the clr values. This is using a Dirichlet estimate for zeros, rather than a constant point estimate we used in the biplots (czm function)
+````
+# this is the main ALDEx function for all downstream analyses
+# mc.samples=128 is often sufficient. This is the number of Monte-Carlo samples from the Dirichlet distribution
 x <- aldex.clr(d.1, mc.samples=128, verbose=TRUE)
+````
+Perform t-test between conditions
+````
+# both Welches and Wilcoxon t-test, plus a Benjamini-Hochberg multiple test correction
+x.tt <- aldex.ttest(x, conds, paired.test=FALSE)x.effect <- aldex.effect(x, conds, include.sample.summary=FALSE, verbose=TRUE)
+````
+Estimate effect size and the within and between condition values
+````
+#include indiv. samples or not with include.sample.summary
+x.effect <- aldex.effect(x, conds, include.sample.summary=TRUE, verbose=TRUE)
 
-
-x.tt <- aldex.ttest(x, conds, paired.test=FALSE)
-x.effect <- aldex.effect(x, conds, include.sample.summary=FALSE, verbose=TRUE)
-
+# Combine the results in one table
 x.all <- data.frame(x.tt, x.effect)
+````
+Write a .txt table with your results
+````
+write.table(x.all, file="aldex_output.txt", sep="\t", quote=F, col.names=NA)
+````
 
+MA and MV (Effect) Plots
+````
+pdf("MA.pdf")
+aldex.plot(x.all, type="MA", test="welch")
+dev.off()
 
+pdf("MW.pdf")
+aldex.plot(x.all, type="MW", test="welch")
+dev.off()
+````
+Sidebar: Find significant OTUs by p-value, and effect size cutoff
+````
 psig <- which(x.all$we.eBH < 0.05 & abs(x.all$effect) > 1)
-
+# or
 subset(x.all, x.all$we.eBH < 0.05 & abs(x.all$effect) > 1)
+````
 
-# A LOT OF DATA! What about control vs BV
-
-#d.f<-as.matrix(d[,grep("cont", colnames(d))])
-
-con<-colnames(d)[grep("cont", colnames(d))]
-bv<-colnames(d)[grep("0_bv", colnames(d))]
-
-d.f<-d[,c(con, bv)]
-
-count <- 10
-d.1 <- data.frame(d.f[which(apply(d, 1, function(x){mean(x)}) > count),], check.names=F)
-
-d.czm <- cmultRepl(t(d.1),  label=0, method="CZM")
-
-d.clr <- t(apply(d.czm, 1, function(x){log(x) - mean(log(x))}))
-d.mvar <- mvar(d.clr)
-d.pcx <- prcomp(d.clr)
-
-l<-c("2_0_cont_NA", "8_0_cont_NA", "20_0_cont_NA", "34_0_cont_NA", "42_0_cont_NA", "48_0_cont_NA", "50_0_cont_NA", "51_0_cont_NA", "56_0_cont_NA", "64_0_cont_NA", "153_0_bv_y", "153_1_bv_y", "158_0_bv_n", "158_1_bv_n", "159_0_bv_n", "159_1_bv_n", "160_0_bv_y", "160_1_bv_y", "171_0_bv_n", "171_1_bv_n", "174_0_bv_y", "174_1_bv_y", "177_0_bv_y", "177_1_bv_y")
-
-biplot(d.pcx, cex=c, col=col, var.axes=F,
-    xlab=paste("PC1: ", round(sum(d.pcx$sdev[1]^2)/d.mvar, 3)),
-    ylab=paste("PC2: ", round(sum(d.pcx$sdev[2]^2)/d.mvar, 3)),
-    scale=0, ylabs=points
-)
 
