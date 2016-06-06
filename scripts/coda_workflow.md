@@ -31,6 +31,7 @@ And then
 ````
 library(zCompositions)
 ````
+#### Part 1: Exploratory Compositional PCA biplot
 
 #### Read in the data table
 In R, you load your OTU table into a `data frame`. You need yo have some idea of what your table looks like before attempting to import. You may want to open the table in Excel to see what format it has and what headers.
@@ -95,23 +96,35 @@ Calculate the total variance and percent variance explained for our PCA axes
 d.mvar <- mvar(d.clr)
 ```
 
+Let's plot the CoDa PCA biplot
 
+````
+# These are some hacks to get the plot to look OK
 # Make the number of points equal to the number of features (for labels)
-#use: "o" or "."
+#   Use: "o" or "."
 points <- c(rep(".", length(dimnames(d.pcx$rotation)[[1]])))
 
-#color and text size for labels and points (vector of 2)
+# Color and text size for labels and points (vector of 2)
+#   The first is the color of the labels, the second is the color of the points
 col=c("black",rgb(1,0,0,0.2))
+#   The first is the size of the lables, the second is the size of the points (scale of 0-1)
 c=c(0.6, 2)
-
-pdf("test.pdf")
+````
+````
 biplot(d.pcx, cex=c, col=col, var.axes=F,
     xlab=paste("PC1: ", round(sum(d.pcx$sdev[1]^2)/d.mvar, 3)),
     ylab=paste("PC2: ", round(sum(d.pcx$sdev[2]^2)/d.mvar, 3)),
     scale=0, ylabs=points
 )
+````
+If you would like a PDF of the plot, do the following:
+````
+pdf("PCA_plot.pdf")
+# The plotting code goes here
 dev.off()
+````
 
+#### Part 2: ALDEx2 for differential expression analysis
 
 library(ALDEx2)
 
