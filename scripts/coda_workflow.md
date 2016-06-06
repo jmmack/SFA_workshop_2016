@@ -160,7 +160,8 @@ x <- aldex.clr(d.1, mc.samples=128, verbose=TRUE)
 Perform t-test between conditions
 ````
 # both Welches and Wilcoxon t-test, plus a Benjamini-Hochberg multiple test correction
-x.tt <- aldex.ttest(x, conds, paired.test=FALSE)x.effect <- aldex.effect(x, conds, include.sample.summary=FALSE, verbose=TRUE)
+x.tt <- aldex.ttest(x, conds, paired.test=FALSE)
+x.effect <- aldex.effect(x, conds, include.sample.summary=FALSE, verbose=TRUE)
 ````
 Estimate effect size and the within and between condition values
 ````
